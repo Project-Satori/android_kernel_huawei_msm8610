@@ -29,8 +29,8 @@
 #ifndef HW_LCD_COMMON_H
 #define HW_LCD_COMMON_H
 
-#include "dsi_v2.h"
-#include "mdss_dsi.h"
+#include "../../drivers/video/msm/mdss/dsi_v2.h"
+#include "../../drivers/video/msm/mdss/mdss_dsi.h"
 
 /* Move from the every LCD file ,those are common */
 /* Add dynamic log */
