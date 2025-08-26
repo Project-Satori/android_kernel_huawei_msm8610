@@ -27,7 +27,7 @@
 #include "dsi_host_v2.h"
 #include "mdss_debug.h"
 #include "mdp3.h"
-#include <mdss_dsi.h>
+#include "mdss_dsi.h"
 #include <linux/hw_lcd_common.h>
 
 #define DSI_POLL_SLEEP_US 1000

@@ -30,7 +30,7 @@
 #include <linux/hw_tp_config.h>
 //#include <linux/hardware_self_adapt.h>
 #include <asm/system.h>
-#include <rmi_config.h>
+//#include <rmi_config.h>
 #include <misc/app_info.h>
 
 #define TP_FW_COB_FILE_NAME  "/tp/1191601.img"
