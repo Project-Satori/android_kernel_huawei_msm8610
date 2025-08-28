@@ -662,9 +662,9 @@ static int hwht_enable_read(char *rpage, char **start,
 	len = 0;
 
 	if (hungtask_enable)
-		len = snprintf(buf, sizeof(buf), "on\n");
+		len = snprintf(buf, 4, "on\n");
 	else
-		len = snprintf(buf, sizeof(buf), "off\n");
+		len = snprintf(buf, 4, "off\n");
 	buf += len;
 
 	len = buf - rpage;
