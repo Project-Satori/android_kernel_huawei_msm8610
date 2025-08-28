@@ -235,6 +235,22 @@ config s5k4e1
 		and QSXGA snapshot at 15 fps.
 		This sensor driver does not support auto focus.
 
+config S5K4H5_LITEON_12P1BA855D
+	bool "Samsang S5K4H5 (BAYER 8MP)"
+	depends on MSMB_CAMERA
+	---help---
+		OmniVision 8 MP Bayer Sensor with auto focus.uses
+		2 mipi lanes, preview config = 1632*1224 30 fps,
+		snapshot config = 3264 * 2448 at 15 fps.
+
+config BF3905_BYD_VHW8152M
+	bool "Sensor BF3905 (YUV .3M)"
+	depends on MSMB_CAMERA
+	---help---
+		BF3905 is a BYD .3 MP Yuv Sensor.
+		It supports 1 or 2 mipi lanes.
+		It does not support auto focus.
+
 config IMX134_SUNNY_P8N09C
 	bool "Sony IMX134_SUNNY_P8N09C (BAYER 8MP)"
 	depends on MSMB_CAMERA
