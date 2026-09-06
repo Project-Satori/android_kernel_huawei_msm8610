@@ -27,3 +27,6 @@ obj-$(CONFIG_OV5648_FOXCONN_SC0602) += ov5648_foxconn_sc0602.o
 obj-$(CONFIG_S5K4E1_SUNNY_P5S07A) += s5k4e1_sunny_p5s07a.o
 obj-$(CONFIG_OV9724_FOXCONN) += ov9724_foxconn.o
 obj-$(CONFIG_S5K9A1_LITEON) += s5k9a1_liteon.o
+
+obj-$(CONFIG_S5K4H5_LITEON_12P1BA855D) += s5k4h5_liteon_12p1ba855d.o
+# obj-$(CONFIG_BF3905_BYD_VHW8152M) += bf3905_byd_vhw8152m.o
