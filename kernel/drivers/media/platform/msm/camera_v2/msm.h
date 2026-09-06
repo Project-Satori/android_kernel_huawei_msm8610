@@ -102,7 +102,7 @@ struct msm_session {
 	struct mutex lock;
 };
 
-int msm_post_event(struct v4l2_event *event, int timeout);
+int msm_post_event_original(struct v4l2_event *event, int timeout);
 int  msm_create_session(unsigned int session, struct video_device *vdev);
 int msm_destroy_session(unsigned int session_id);
 
@@ -117,4 +117,25 @@ struct vb2_queue *msm_get_stream_vb2q(unsigned int session_id,
 	unsigned int stream_id);
 struct msm_stream *msm_get_stream_from_vb2q(struct vb2_queue *q);
 struct msm_session *msm_session_find(unsigned int session_id);
+
+
+// 先 undef 掉原来的
+#undef msm_post_event
+#define msm_post_event(evt_ptr, timeout_ms) \
+    ({ \
+        int __rc = __msm_post_event_logged(evt_ptr, timeout_ms, __func__, __LINE__); \
+        __rc; \
+    })
+
+// 新增内部实现
+static inline int __msm_post_event_logged(struct v4l2_event *event, int timeout,
+                                          const char *func, int line)
+{
+    int rc = msm_post_event_original(event, timeout);  // 调用原始函数
+    pr_info("%s:%d msm_post_event event_id=%d timeout=%d rc=%d\n",
+            func, line, event->id, timeout, rc);
+    return rc;
+}
+
+
 #endif /*_MSM_H */

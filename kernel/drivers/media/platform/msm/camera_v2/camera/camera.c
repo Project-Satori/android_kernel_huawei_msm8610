@@ -184,6 +184,8 @@ static int camera_v4l2_s_ctrl(struct file *filep, void *fh,
 	if (ctrl->id >= V4L2_CID_PRIVATE_BASE) {
 		camera_pack_event(filep, MSM_CAMERA_SET_PARM, ctrl->id,
 		ctrl->value, &event);
+		pr_err("%s:%d: ctrl->id = %d, ctrl->value = %d\n",__func__,__LINE__,ctrl->id,
+			ctrl->value);
 
 		rc = msm_post_event(&event, MSM_POST_EVT_TIMEOUT);
 		if (rc < 0)

@@ -659,7 +659,7 @@ static unsigned int msm_poll(struct file *f,
 /* something seriously wrong if msm_close is triggered
  *   !!! user space imaging server is shutdown !!!
  */
-int msm_post_event(struct v4l2_event *event, int timeout)
+int msm_post_event_original(struct v4l2_event *event, int timeout)
 {
 	int rc = 0;
 	struct video_device *vdev;
@@ -742,6 +742,13 @@ int msm_post_event(struct v4l2_event *event, int timeout)
 	}
 
 	event_data = (struct msm_v4l2_event_data *)cmd->event.u.data;
+
+	pr_err("__debug__: %s: cmd:0x%x (%u) status:%d sessionID:%d \
+			streamID:%d arg_value:%u ret_value:%u\n", __func__, event_data->command,
+			(event_data->command >= V4L2_CID_PRIVATE_BASE) ? (event_data->command -
+			V4L2_CID_PRIVATE_BASE) : event_data->command, event_data->status,
+			event_data->session_id, event_data->stream_id, event_data->arg_value,
+			event_data->ret_value);
 
 	/* compare cmd_ret and event */
 	if (WARN_ON(event->type != cmd->event.type) ||
