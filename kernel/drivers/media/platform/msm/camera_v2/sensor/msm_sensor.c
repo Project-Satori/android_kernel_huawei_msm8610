@@ -606,7 +606,7 @@ static long msm_sensor_subdev_ioctl(struct v4l2_subdev *sd,
 		return -EBADF;
 	}
 	switch (cmd) {
-	case VIDIOC_MSM_SENSOR_CFG:
+	case VIDIOC_MSM_SENSOR_CFG: case VIDIOC_MSM_SENSOR_CFG_LEGACY:
 		return s_ctrl->func_tbl->sensor_config(s_ctrl, argp);
 	case VIDIOC_MSM_SENSOR_GET_AF_STATUS:
 		return msm_sensor_get_af_status(s_ctrl, argp);
@@ -622,7 +622,7 @@ static long msm_sensor_subdev_ioctl(struct v4l2_subdev *sd,
 
 int msm_sensor_config(struct msm_sensor_ctrl_t *s_ctrl, void __user *argp)
 {
-	struct sensorb_cfg_data *cdata = (struct sensorb_cfg_data *)argp;
+	struct sensorb_cfg_data_legacy *cdata = (struct sensorb_cfg_data_legacy *)argp;
 	long rc = 0;
 	int i = 0;
 	mutex_lock(s_ctrl->msm_sensor_mutex);
@@ -638,14 +638,14 @@ int msm_sensor_config(struct msm_sensor_ctrl_t *s_ctrl, void __user *argp)
 		for (i = 0; i < SUB_MODULE_MAX; i++)
 			cdata->cfg.sensor_info.subdev_id[i] =
 				s_ctrl->sensordata->sensor_info->subdev_id[i];
-		cdata->cfg.sensor_info.is_mount_angle_valid =
-			s_ctrl->sensordata->sensor_info->is_mount_angle_valid;
-		cdata->cfg.sensor_info.sensor_mount_angle =
-			s_ctrl->sensordata->sensor_info->sensor_mount_angle;
-		cdata->cfg.sensor_info.position =
-			s_ctrl->sensordata->sensor_info->position;
-		cdata->cfg.sensor_info.modes_supported =
-			s_ctrl->sensordata->sensor_info->modes_supported;
+		// cdata->cfg.sensor_info.is_mount_angle_valid =
+		// 	s_ctrl->sensordata->sensor_info->is_mount_angle_valid;
+		// cdata->cfg.sensor_info.sensor_mount_angle =
+		// 	s_ctrl->sensordata->sensor_info->sensor_mount_angle;
+		// cdata->cfg.sensor_info.position =
+		// 	s_ctrl->sensordata->sensor_info->position;
+		// cdata->cfg.sensor_info.modes_supported =
+		// 	s_ctrl->sensordata->sensor_info->modes_supported;
 		CDBG("%s:%d sensor name %s\n", __func__, __LINE__,
 			cdata->cfg.sensor_info.sensor_name);
 		CDBG("%s:%d session id %d\n", __func__, __LINE__,
@@ -653,9 +653,9 @@ int msm_sensor_config(struct msm_sensor_ctrl_t *s_ctrl, void __user *argp)
 		for (i = 0; i < SUB_MODULE_MAX; i++)
 			CDBG("%s:%d subdev_id[%d] %d\n", __func__, __LINE__, i,
 				cdata->cfg.sensor_info.subdev_id[i]);
-		CDBG("%s:%d mount angle valid %d value %d\n", __func__,
-			__LINE__, cdata->cfg.sensor_info.is_mount_angle_valid,
-			cdata->cfg.sensor_info.sensor_mount_angle);
+		// CDBG("%s:%d mount angle valid %d value %d\n", __func__,
+		// 	__LINE__, cdata->cfg.sensor_info.is_mount_angle_valid,
+		// 	cdata->cfg.sensor_info.sensor_mount_angle);
 
 		break;
 	case CFG_GET_SENSOR_INIT_PARAMS:

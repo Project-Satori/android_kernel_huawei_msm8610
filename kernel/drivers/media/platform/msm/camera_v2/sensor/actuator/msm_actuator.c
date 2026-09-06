@@ -748,7 +748,7 @@ static long msm_actuator_subdev_ioctl(struct v4l2_subdev *sd,
 	switch (cmd) {
 	case VIDIOC_MSM_SENSOR_GET_SUBDEV_ID:
 		return msm_actuator_get_subdev_id(a_ctrl, argp);
-	case VIDIOC_MSM_ACTUATOR_CFG:
+	case VIDIOC_MSM_ACTUATOR_CFG: case VIDIOC_MSM_ACTUATOR_CFG_LEGACY:
 		return msm_actuator_config(a_ctrl, argp);
 	case MSM_SD_SHUTDOWN:
 		msm_actuator_close(sd, NULL);

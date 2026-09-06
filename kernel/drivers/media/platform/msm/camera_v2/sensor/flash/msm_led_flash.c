@@ -37,16 +37,19 @@ static long msm_led_flash_subdev_ioctl(struct v4l2_subdev *sd,
 		pr_err("fctrl NULL\n");
 		return -EINVAL;
 	}
+	if (cmd == 0xC00456C7)  // vendor HAL 发送的 legacy cmd
+    	cmd = VIDIOC_MSM_FLASH_LED_DATA_CFG_LEGACY;
 	switch (cmd) {
 	case VIDIOC_MSM_SENSOR_GET_SUBDEV_ID:
 		return fctrl->func_tbl->flash_get_subdev_id(fctrl, argp);
-	case VIDIOC_MSM_FLASH_LED_DATA_CFG:
+	case VIDIOC_MSM_FLASH_LED_DATA_CFG: case VIDIOC_MSM_FLASH_LED_DATA_CFG_LEGACY:
 		return fctrl->func_tbl->flash_led_config(fctrl, argp);
 	case MSM_SD_SHUTDOWN:
 		*(int *)argp = MSM_CAMERA_LED_RELEASE;
 		return fctrl->func_tbl->flash_led_config(fctrl, argp);
 	default:
-		pr_err_ratelimited("invalid cmd %d\n", cmd);
+		pr_err_ratelimited("invalid cmd %x\n", cmd);
+		pr_err("VIDIOC_MSM_FLASH_LED_DATA_CFG_LEGACY = %x",VIDIOC_MSM_FLASH_LED_DATA_CFG_LEGACY);
 		return -ENOIOCTLCMD;
 	}
 }

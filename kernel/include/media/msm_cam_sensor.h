@@ -348,6 +348,14 @@ struct msm_sensor_info_t {
 	char sensor_project_name[MAX_SENSOR_NAME];
 };
 
+struct msm_sensor_info_t_legacy {
+	char sensor_name[MAX_SENSOR_NAME];
+	int32_t    session_id;
+	int32_t     subdev_id[SUB_MODULE_MAX];
+    /*add project name for the project menu*/
+    char sensor_project_name[MAX_SENSOR_NAME];
+};
+
 struct camera_vreg_t {
 	const char *reg_name;
 	enum camera_vreg_type type;
@@ -403,6 +411,15 @@ struct sensorb_cfg_data {
 	int cfgtype;
 	union {
 		struct msm_sensor_info_t      sensor_info;
+		struct msm_sensor_init_params sensor_init_params;
+		void                         *setting;
+	} cfg;
+};
+
+struct sensorb_cfg_data_legacy {
+	int cfgtype;
+	union {
+		struct msm_sensor_info_t_legacy      sensor_info;
 		struct msm_sensor_init_params sensor_init_params;
 		void                         *setting;
 	} cfg;
@@ -620,6 +637,17 @@ struct msm_actuator_cfg_data {
 	} cfg;
 };
 
+struct msm_actuator_cfg_data_legacy {
+	int cfgtype;
+	uint8_t is_af_supported;
+	union {
+		struct msm_actuator_move_params_t move;
+		struct msm_actuator_set_info_t set_info;
+		struct msm_actuator_get_info_t get_info;
+		enum af_camera_name cam_name;
+	} cfg;
+};
+
 enum msm_actuator_write_type {
 	MSM_ACTUATOR_WRITE_HW_DAMP,
 	MSM_ACTUATOR_WRITE_DAC,
@@ -650,6 +678,11 @@ struct msm_camera_led_cfg_t {
 	uint32_t flash_current[2];
 };
 
+struct msm_camera_led_cfg_t_legacy {
+	enum msm_camera_led_config_t cfgtype;
+	uint32_t led_current;
+};
+
 /* sensor init structures and enums */
 enum msm_sensor_init_cfg_type_t {
 	CFG_SINIT_PROBE,
@@ -663,6 +696,9 @@ struct sensor_init_cfg_data {
 		void *setting;
 	} cfg;
 };
+
+#define VIDIOC_MSM_SENSOR_CFG_LEGACY \
+	_IOWR('V', BASE_VIDIOC_PRIVATE + 1, struct sensorb_cfg_data_legacy)
 
 #define VIDIOC_MSM_SENSOR_CFG \
 	_IOWR('V', BASE_VIDIOC_PRIVATE + 1, struct sensorb_cfg_data)
@@ -682,8 +718,14 @@ struct sensor_init_cfg_data {
 #define VIDIOC_MSM_ACTUATOR_CFG \
 	_IOWR('V', BASE_VIDIOC_PRIVATE + 6, struct msm_actuator_cfg_data)
 
+#define VIDIOC_MSM_ACTUATOR_CFG_LEGACY \
+	_IOWR('V', BASE_VIDIOC_PRIVATE + 6, struct msm_actuator_cfg_data_legacy)
+
 #define VIDIOC_MSM_FLASH_LED_DATA_CFG \
 	_IOWR('V', BASE_VIDIOC_PRIVATE + 7, struct msm_camera_led_cfg_t)
+
+#define VIDIOC_MSM_FLASH_LED_DATA_CFG_LEGACY \
+	_IOWR('V', BASE_VIDIOC_PRIVATE + 7, struct msm_camera_led_cfg_t_legacy)	
 
 #define VIDIOC_MSM_EEPROM_CFG \
 	_IOWR('V', BASE_VIDIOC_PRIVATE + 8, struct msm_eeprom_cfg_data)
