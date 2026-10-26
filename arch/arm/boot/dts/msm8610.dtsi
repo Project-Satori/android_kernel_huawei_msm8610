@@ -574,25 +574,8 @@
 		qcom,scl-gpio = <&msmgpio 17 0>;
                 qcom,master-id = <86>;
 	};
-
-
-	i2c@f9924000 { /* BLSP-1 QUP-3 */
-		cell-index = <2>;
-		compatible = "qcom,i2c-qup";
-		#address-cells = <1>;
-		#size-cells = <0>;
-		reg-names = "qup_phys_addr";
-		reg = <0xf9924000 0x1000>;
-		interrupt-names = "qup_err_intr";
-		interrupts = <0 96 0>;
-		qcom,i2c-bus-freq = <100000>;
-		qcom,i2c-src-freq = <19200000>;
-		qcom,sda-gpio = <&msmgpio 8 0>;
-		qcom,scl-gpio = <&msmgpio 9 0>;
-		qcom,master-id = <86>;
-	};
-
-	i2c@f9925000 { /* BLSP-1 QUP-3 */
+	//delete the unuse I2c config
+	i2c3: i2c@f9925000 { /* BLSP-1 QUP-3 */
 		cell-index = <0>;
 		compatible = "qcom,i2c-qup";
 		#address-cells = <1>;
@@ -601,7 +584,7 @@
 		reg = <0xf9925000 0x1000>;
 		interrupt-names = "qup_err_intr";
 		interrupts = <0 97 0>;
-		qcom,i2c-bus-freq = <100000>;
+		qcom,i2c-bus-freq = <400000>;
                 qcom,i2c-src-freq = <19200000>;
                 qcom,sda-gpio = <&msmgpio 10 0>;
                 qcom,scl-gpio = <&msmgpio 11 0>;
@@ -910,9 +893,14 @@
 		compatible = "qcom,msm-thermal";
 		qcom,sensor-id = <5>;
 		qcom,poll-ms = <250>;
-		qcom,limit-temp = <60>;
+
+		/*Changed from 60 to 75, inorder to maximize the bootup speed in high temp conditions*/
+		qcom,limit-temp = <75>;
 		qcom,temp-hysteresis = <10>;
-		qcom,freq-step = <2>;
+		/*Changed from 2 to 1 as the lifetime of msm_thermal is limited only during boot. */
+		/* Once boot completed the thermald is used to profile cpu freqs in high temp conditions*/
+		qcom,freq-step = <1>;
+
 		qcom,freq-control-mask = <0xf>;
 		qcom,core-limit-temp = <80>;
 		qcom,core-temp-hysteresis = <10>;
@@ -971,7 +959,7 @@
 				<55 512 120000 1200000>,
 				<55 512 393600 3936000>;
 	};
-
+	/* solve start up slowly issue */
         qcom,msm-rng@f9bff000 {
                 compatible = "qcom,msm-rng";
                 reg = <0xf9bff000 0x200>;

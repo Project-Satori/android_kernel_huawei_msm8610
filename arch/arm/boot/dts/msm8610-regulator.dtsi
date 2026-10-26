@@ -258,7 +258,7 @@
 	rpm-regulator-ldoa7 {
 		status = "okay";
 		pm8110_l7: regulator-l7 {
-			regulator-min-microvolt = <2050000>;
+			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <2050000>;
 			qcom,init-voltage = <2050000>;
 			status = "okay";
@@ -358,9 +358,10 @@
 	rpm-regulator-ldoa17 {
 		status = "okay";
 		pm8110_l17: regulator-l17 {
-			regulator-min-microvolt = <2900000>;
-			regulator-max-microvolt = <2900000>;
-			qcom,init-voltage = <2900000>;
+			/*change the emmc vdd-voltage 2.9v to 3.1v*/
+			regulator-min-microvolt = <3100000>;
+			regulator-max-microvolt = <3100000>;
+			qcom,init-voltage = <3100000>;
 			status = "okay";
 		};
 	};
