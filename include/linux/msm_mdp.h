@@ -109,6 +109,12 @@
 #define MDSS_MDP_HW_REV_103_1	MDSS_MDP_REV(1, 3, 1) /* 8084 v1.1 */
 #define MDSS_MDP_HW_REV_200	MDSS_MDP_REV(2, 0, 0) /* 8092 v1.0 */
 
+/* we do not use CONFIG_FB_DISPLAY_INVERSION ,bacause framework would compile failed */
+#define MSMFB_DISPLAY_INVERSION	_IOWR(MSMFB_IOCTL_MAGIC, 253, unsigned  int)
+#ifdef CONFIG_FB_AUTO_CABC
+#define MSMFB_AUTO_CABC           _IOWR(MSMFB_IOCTL_MAGIC, 255, struct msmfb_cabc_config)
+#endif
+/* Delete code that we don't use */
 enum {
 	NOTIFY_UPDATE_START,
 	NOTIFY_UPDATE_STOP,
@@ -1064,7 +1070,28 @@ struct mdp_page_protection {
 	uint32_t page_protection;
 };
 
-
+#ifdef CONFIG_FB_AUTO_CABC
+/* define cabc_mode include CABC_MODE_UI,CABC_MODE_STILL,etc */
+enum cabc_mode {
+    CABC_MODE_OFF,
+    CABC_MODE_UI,
+    CABC_MODE_STILL,
+    CABC_MODE_MOVING,
+};
+/* define msmfb_cabc_config to use for cabc mode etc */
+struct msmfb_cabc_config {
+    uint32_t mode;
+    uint32_t dimming_on;
+    uint32_t mov_det_on;
+};
+#endif
+/* Delete code that we don't use */
+#ifdef CONFIG_HUAWEI_LCD
+enum inversion_mode {
+	COLUMN_INVERSION,
+	DOT_INVERSION,
+};
+#endif
 struct mdp_mixer_info {
 	int pndx;
 	int pnum;

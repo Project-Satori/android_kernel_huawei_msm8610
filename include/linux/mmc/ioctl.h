@@ -47,6 +47,10 @@ struct mmc_ioc_cmd {
 
 #define MMC_IOC_CMD _IOWR(MMC_BLOCK_MAJOR, 0, struct mmc_ioc_cmd)
 
+#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
+#define MMC_IOC_WP_CMD _IOWR(MMC_BLOCK_MAJOR, 0, char)
+#endif
+
 /**
  * There are four request types that are applicable for rpmb accesses- two
  * under read category and two under write. They are

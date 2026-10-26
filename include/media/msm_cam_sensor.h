@@ -344,6 +344,8 @@ struct msm_sensor_info_t {
 	uint32_t sensor_mount_angle;
 	int modes_supported;
 	enum camb_position_t position;
+	/*add project name for the project menu*/
+	char sensor_project_name[MAX_SENSOR_NAME];
 };
 
 struct camera_vreg_t {
@@ -353,6 +355,19 @@ struct camera_vreg_t {
 	int max_voltage;
 	int op_mode;
 	uint32_t delay;
+};
+
+
+
+enum camb_auto_exposure_mode_type{
+    CAMB_AEC_MODE_FRAME_AVERAGE,
+    CAMB_AEC_MODE_CENTER_WEIGHTED,
+    CAMB_AEC_MODE_SPOT_METERING,
+    CAMB_AEC_MODE_SMART_METERING,
+    CAMB_AEC_MODE_USER_METERING,
+    CAMB_AEC_MODE_SPOT_METERING_ADV,
+    CAMB_AEC_MODE_CENTER_WEIGHTED_ADV,
+    CAMB_AEC_MODE_MAX
 };
 
 enum camerab_mode_t {
@@ -368,6 +383,7 @@ struct msm_sensor_init_params {
 	enum camb_position_t position;
 	/* sensor mount angle */
 	uint32_t            sensor_mount_angle;
+	enum camb_auto_exposure_mode_type ae_meter_type;
 };
 
 struct msm_camera_sensor_slave_info {
@@ -474,6 +490,9 @@ enum msm_sensor_cfg_type_t {
 	CFG_SET_WHITE_BALANCE,
 	CFG_SET_AUTOFOCUS,
 	CFG_CANCEL_AUTOFOCUS,
+	CFG_GET_SENSOR_PROJECT_INFO,
+	CFG_SET_OTP_INFO, 
+
 };
 
 enum msm_actuator_cfg_type_t {
@@ -574,6 +593,9 @@ enum af_camera_name {
 	ACTUATOR_MAIN_CAM_3,
 	ACTUATOR_MAIN_CAM_4,
 	ACTUATOR_MAIN_CAM_5,
+	ACTUATOR_MAIN_CAM_6,
+	ACTUATOR_MAIN_CAM_7,
+	ACTUATOR_MAIN_CAM_8,
 	ACTUATOR_WEB_CAM_0,
 	ACTUATOR_WEB_CAM_1,
 	ACTUATOR_WEB_CAM_2,
@@ -617,6 +639,9 @@ enum msm_camera_led_config_t {
 	MSM_CAMERA_LED_HIGH,
 	MSM_CAMERA_LED_INIT,
 	MSM_CAMERA_LED_RELEASE,
+	MSM_CAMERA_LED_TORCH = 16,
+	MSM_CAMERA_LED_TORCH_POWER_NORMAL = 108,//108
+	MSM_CAMERA_LED_TORCH_POWER_ABNORMAL,//109
 };
 
 struct msm_camera_led_cfg_t {

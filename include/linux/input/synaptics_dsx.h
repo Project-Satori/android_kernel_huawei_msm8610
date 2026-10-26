@@ -1,11 +1,12 @@
+/* move to /include/linux/ ,in case conflict with qcom */
+/*Add synaptics new driver "Synaptics DSX I2C V2.0"*/
 /*
- * Synaptics RMI4 touchscreen driver
+ * Synaptics DSX touchscreen driver
  *
  * Copyright (C) 2012 Synaptics Incorporated
  *
  * Copyright (C) 2012 Alexandra Chin <alexandra.chin@tw.synaptics.com>
  * Copyright (C) 2012 Scott Lin <scott.lin@tw.synaptics.com>
- * Copyright (c) 2013, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,41 +22,50 @@
 #ifndef _SYNAPTICS_DSX_H_
 #define _SYNAPTICS_DSX_H_
 
+#ifdef CONFIG_HUAWEI_KERNEL
+#define ENABLE_VIRTUAL_KEYS
+#endif /*CONFIG_HUAWEI_KERNEL*/
+
 /*
- * struct synaptics_rmi4_capacitance_button_map - 0d button map
- * @nbuttons: number of buttons
- * @map: button map
+ * synaptics_dsx_cap_button_map - 0d button map
+ * @nbuttons: number of 0d buttons
+ * @map: pointer to array of button types
  */
-struct synaptics_rmi4_capacitance_button_map {
+struct synaptics_dsx_cap_button_map {
 	unsigned char nbuttons;
 	unsigned char *map;
 };
 
+#ifdef CONFIG_HUAWEI_KERNEL
+#ifdef ENABLE_VIRTUAL_KEYS
+struct syanptics_virtual_keys {
+	struct kobj_attribute kobj_attr;
+	u16 *data;
+	int size;
+};
+#endif
+#endif /*CONFIG_HUAWEI_KERNEL*/
+
 /*
- * struct synaptics_rmi4_platform_data - rmi4 platform data
+ * struct synaptics_dsx_platform_data - dsx platform data
  * @x_flip: x flip flag
  * @y_flip: y flip flag
- * @i2c_pull_up: pull up i2c bus with regulator
- * @power_down_enable: enable complete regulator shutdown in suspend
  * @irq_gpio: attention interrupt gpio
- * @irq_flags: flags used by the irq
- * @reset_flags: flags used by reset line
+ * @power_gpio: power switch gpio
+ * @power_on_state: power switch active state
  * @reset_gpio: reset gpio
- * @panel_x: panel maximum values on the x
- * @panel_y: panel maximum values on the y
- * @disp_maxx: display panel maximum values on the x
- * @disp_maxy: display panel maximum values on the y
- * @disp_minx: display panel minimum values on the x
- * @disp_miny: display panel minimum values on the y
- * @panel_maxx: touch panel maximum values on the x
- * @panel_maxy: touch panel maximum values on the y
- * @panel_minx: touch panel minimum values on the x
- * @panel_miny: touch panel minimum values on the y
- * @reset_delay: reset delay
+ * @reset_on_state: reset active state
+ * @irq_flags: irq flags
+ * @panel_x: x-axis resolution of display panel
+ * @panel_y: y-axis resolution of display panel
+ * @power_delay_ms: delay time to wait after power-on
+ * @reset_delay_ms: delay time to wait after reset
+ * @reset_active_ms: reset active time
+ * @regulator_name: pointer to name of regulator
  * @gpio_config: pointer to gpio configuration function
- * @capacitance_button_map: pointer to 0d button map
+ * @cap_button_map: pointer to 0d button map
  */
-struct synaptics_rmi4_platform_data {
+struct synaptics_dsx_platform_data {
 	bool x_flip;
 	bool y_flip;
 	bool i2c_pull_up;
