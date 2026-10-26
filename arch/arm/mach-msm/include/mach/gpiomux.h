@@ -175,6 +175,10 @@ void __msm_gpiomux_write(unsigned gpio, struct gpiomux_setting val);
 int msm_tlmm_misc_reg_read(enum msm_tlmm_misc_reg misc_reg);
 
 void msm_tlmm_misc_reg_write(enum msm_tlmm_misc_reg misc_reg, int val);
+#ifdef CONFIG_HUAWEI_KERNEL
+void msm_gpiomux_read(unsigned gpio, struct gpiomux_setting *val);
+void msm_gpio_print_enabled(void);
+#endif
 
 #else
 static inline int msm_gpiomux_init(size_t ngpio)
