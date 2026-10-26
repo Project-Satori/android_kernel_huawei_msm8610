@@ -256,6 +256,13 @@ static int lowmem_shrink(struct shrinker *s, struct shrink_control *sc)
 	else
 		other_file = 0;
 
+    /*
+     * subtract swapcache to other_file
+     
+     */
+#if defined(CONFIG_SWAP)
+    other_file -= (int)total_swapcache_pages;
+#endif
 	tune_lmk_param(&other_free, &other_file, sc);
 
 	if (lowmem_adj_size < array_size)
