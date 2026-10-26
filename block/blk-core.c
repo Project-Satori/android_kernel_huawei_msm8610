@@ -35,7 +35,16 @@
 #define CREATE_TRACE_POINTS
 #include <trace/events/block.h>
 
+#ifdef CONFIG_MMC_WP_SYSTEM
+#include <linux/mmc/card.h>
+#endif
+
 #include "blk.h"
+#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
+#ifdef CONFIG_HW_FEATURE_STORAGE_DIAGNOSE_LOG
+#include <linux/store_log.h>
+#endif
+#endif
 
 EXPORT_TRACEPOINT_SYMBOL_GPL(block_bio_remap);
 EXPORT_TRACEPOINT_SYMBOL_GPL(block_rq_remap);
@@ -43,6 +52,9 @@ EXPORT_TRACEPOINT_SYMBOL_GPL(block_bio_complete);
 
 DEFINE_IDA(blk_queue_ida);
 
+#ifdef CONFIG_MMC_WP_SYSTEM
+bool mmc_wp_partition_enable = true;
+#endif
 /*
  * For the allocated request tables
  */
@@ -52,6 +64,16 @@ static struct kmem_cache *request_cachep;
  * For queue allocation
  */
 struct kmem_cache *blk_requestq_cachep;
+
+/*
+ * For sys write protection status
+ */
+#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
+/*when r.secure=0 && ro.debuggable=1, set it to 1.*/
+static volatile int ro_secure_debuggable = 0;
+/* system partition number is platform dependent, MUST change it according to platform */
+#define PART_SYSTEM "mmcblk0p23"
+#endif
 
 /*
  * Controlling structure to kblockd
@@ -1613,6 +1635,10 @@ static inline int bio_check_eod(struct bio *bio, unsigned int nr_sectors)
 	return 0;
 }
 
+#ifdef CONFIG_MMC_WP_SYSTEM
+extern void ext4_handle_kmsg(void);
+#endif
+
 static noinline_for_stack bool
 generic_make_request_checks(struct bio *bio)
 {
@@ -1623,6 +1649,30 @@ generic_make_request_checks(struct bio *bio)
 	struct hd_struct *part;
 
 	might_sleep();
+
+	#ifdef CONFIG_MMC_WP_SYSTEM
+	if (!strcmp(bdevname(bio->bi_bdev,b), MMC_WP_SYSTEM_PARTNO) && (bio->bi_rw & WRITE)&&
+		mmc_wp_partition_enable){
+
+        if(NULL != bio->bi_bdev->bd_super){
+		    // If the system mount property is rw. Don't record the log. It may in app debug screen.
+	        if(strcmp(current->comm,"mount") && strcmp(current->comm,"adbd") && (bio->bi_bdev->bd_super->s_flags & MS_RDONLY))
+	        {
+				printk(KERN_ERR
+				"%s(%d): Write to protected emmc %s size=%u(sectors) start_address=%Lu(sector)\n",
+				current->comm, task_pid_nr(current),bdevname(bio->bi_bdev,b),
+				bio_sectors(bio),(long long)bio->bi_sector);
+
+	           //record the log into sdcard/ext4_error_log/
+	           ext4_handle_kmsg();
+	        }
+		}
+		else
+		{
+	        printk(KERN_INFO "bio->bi_bdev->bd_super is NULL then goto next \n");
+		}
+	}
+	#endif
 
 	if (bio_check_eod(bio, nr_sectors))
 		goto end_io;
@@ -1777,6 +1827,14 @@ void generic_make_request(struct bio *bio)
 	current->bio_list = NULL; /* deactivate */
 }
 EXPORT_SYMBOL(generic_make_request);
+#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
+int blk_set_ro_secure_debuggable(int state)
+{
+    ro_secure_debuggable = state;
+    return 0;
+}
+EXPORT_SYMBOL(blk_set_ro_secure_debuggable);
+#endif
 
 /**
  * submit_bio - submit a bio to the block device layer for I/O
@@ -1791,6 +1849,9 @@ EXPORT_SYMBOL(generic_make_request);
 void submit_bio(int rw, struct bio *bio)
 {
 	int count = bio_sectors(bio);
+#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
+    char devname[BDEVNAME_SIZE] = {0};
+#endif
 
 	bio->bi_rw |= rw;
 
@@ -1806,6 +1867,50 @@ void submit_bio(int rw, struct bio *bio)
 			task_io_account_read(bio->bi_size);
 			count_vm_events(PGPGIN, count);
 		}
+
+#ifdef CONFIG_HW_SYSTEM_WR_PROTECT
+        if(rw & WRITE)
+        {
+            memset(devname, 0x00, BDEVNAME_SIZE);
+            bdevname(bio->bi_bdev, devname);
+
+            /*
+             * runmode=factory:send write request to mmc driver.
+             * bootmode=recovery:send write request to mmc driver.
+             * partition is mounted ro: file system will block write request.
+             * root user: send write request to mmc driver.
+             */
+            if((strstr(devname,PART_SYSTEM)!=NULL) &&
+                    ro_secure_debuggable)
+            {
+#ifdef CONFIG_HW_FEATURE_STORAGE_DIAGNOSE_LOG
+                MSG_WRAPPER(STORAGE_ERROR_BASE|EXT4_RUNNING_ERROR_BASE|EXT4_ERR_CAPS,
+                        "%s(%d): %s block %Lu on %s (%u sectors) %d %s.\n",
+                        current->comm, task_pid_nr(current),
+                        (rw & WRITE) ? "WRITE" : "READ",
+                        (unsigned long long)bio->bi_sector,
+                        devname,
+                        count,
+                        ro_secure_debuggable,
+                        (strstr(saved_command_line,"androidboot.widvine_state=locked") != NULL) ? "locked" : "unlock");
+#else
+                printk(KERN_DEBUG "[HW]:EXT4_ERR_CAPS:%s(%d): %s block %Lu on %s (%u sectors) %d %s.\n",
+                        current->comm, task_pid_nr(current),
+                        (rw & WRITE) ? "WRITE" : "READ",
+                        (unsigned long long)bio->bi_sector,
+                        devname,
+                        count,
+                        ro_secure_debuggable,
+                        (strstr(saved_command_line,"androidboot.widvine_state=locked") != NULL) ? "locked" : "unlock");
+
+#endif
+#ifdef CONFIG_HW_SYSTEM_WR_PROTECT_ENABLE
+                bio_endio(bio, -EIO);
+                return;
+#endif
+            }
+        }
+#endif
 
 		if (unlikely(block_dump)) {
 			char b[BDEVNAME_SIZE];
