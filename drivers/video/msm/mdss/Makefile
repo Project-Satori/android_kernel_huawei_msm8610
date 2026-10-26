@@ -15,8 +15,7 @@ obj-$(CONFIG_FB_MSM_MDSS) += mdss-mdp.o
 ifeq ($(CONFIG_FB_MSM_MDSS),y)
 obj-$(CONFIG_DEBUG_FS) += mdss_debug.o mdss_debug_xlog.o
 endif
-
-dsi-v2-objs = dsi_v2.o dsi_host_v2.o dsi_io_v2.o
+dsi-v2-objs = dsi_v2.o dsi_host_v2.o dsi_io_v2.o dsi_status_v2.o
 obj-$(CONFIG_FB_MSM_MDSS_MDP3) += dsi-v2.o
 
 mdss-dsi-objs := mdss_dsi.o mdss_dsi_host.o mdss_dsi_cmd.o
@@ -47,3 +46,5 @@ obj-$(CONFIG_FB_MSM_MDSS_DSI_CTRL_STATUS) += dsi_status_v2.o
 else
 obj-$(CONFIG_FB_MSM_MDSS_DSI_CTRL_STATUS) += mdss_dsi_status.o
 endif
+#/* recreat lcd dts in fc1 baseline */
+obj-$(CONFIG_HUAWEI_LCD) += hw_lcd_debug.o hw_lcd_common.o

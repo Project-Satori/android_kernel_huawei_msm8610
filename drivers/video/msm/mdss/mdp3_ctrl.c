@@ -24,6 +24,10 @@
 #include "mdp3_ctrl.h"
 #include "mdp3.h"
 #include "mdp3_ppp.h"
+#include <linux/hw_lcd_common.h>
+#ifdef CONFIG_HUAWEI_KERNEL
+extern int mdss_dsi_set_fps(int frame_rate);
+#endif
 
 #define VSYNC_EXPIRE_TICK	4
 
@@ -551,6 +555,7 @@ static int mdp3_ctrl_dma_init(struct msm_fb_data_type *mfd,
 	return rc;
 }
 
+/* rollback to qcom fc baseline original code */
 static int mdp3_ctrl_on(struct msm_fb_data_type *mfd)
 {
 	int rc = 0;
@@ -626,9 +631,16 @@ on_error:
 	if (!rc)
 		mdp3_session->status = 1;
 	mutex_unlock(&mdp3_session->lock);
+/*add log on panel resume and suspend module */
+#ifdef CONFIG_HUAWEI_LCD
+	LCD_LOG_INFO("exit %s\n",__func__);
+#endif
 	return rc;
 }
-
+//define the mutex lock and globle vars here
+DEFINE_MUTEX(bta_read);
+int esd_bta_flag = 0;
+extern int esd_check_flag;
 static int mdp3_ctrl_off(struct msm_fb_data_type *mfd)
 {
 	int rc = 0;
@@ -646,13 +658,21 @@ static int mdp3_ctrl_off(struct msm_fb_data_type *mfd)
 	panel = mdp3_session->panel;
 	mutex_lock(&mdp3_session->lock);
 
-	if (panel && panel->set_backlight)
-		panel->set_backlight(panel, 0);
+/*delete code we won't use */
 
 	if (!mdp3_session->status) {
 		pr_debug("fb%d is off already", mfd->index);
 		goto off_error;
 	}
+	//stop the IC register ESD check before DMA stop
+	mutex_lock(&bta_read);
+	if(1 == esd_check_flag)
+	{
+		esd_bta_flag = 0;
+		LCD_LOG_INFO("%s:%d, disable IC regster ESD here",
+					__func__, __LINE__);
+	}
+	mutex_unlock(&bta_read);
 
 	mdp3_ctrl_clk_enable(mfd, 1);
 
@@ -660,9 +680,14 @@ static int mdp3_ctrl_off(struct msm_fb_data_type *mfd)
 
 	rc = mdp3_session->dma->stop(mdp3_session->dma, mdp3_session->intf);
 	if (rc)
+/*add log on panel resume and suspend module */
+	{	
+#ifdef CONFIG_HUAWEI_LCD
+		LCD_LOG_ERR("fail to stop the MDP3 dma\n");
+#else
 		pr_debug("fail to stop the MDP3 dma\n");
-
-
+#endif
+	}
 	if (panel->event_handler)
 		rc = panel->event_handler(panel, MDSS_EVENT_PANEL_OFF, NULL);
 	if (rc)
@@ -700,6 +725,10 @@ off_error:
 		mdp3_bufq_deinit(&mdp3_session->bufq_in);
 	}
 	mutex_unlock(&mdp3_session->lock);
+/*add log on panel resume and suspend module*/
+#ifdef CONFIG_HUAWEI_LCD
+	LCD_LOG_INFO("exit %s\n",__func__);
+#endif
 	return 0;
 }
 
@@ -750,6 +779,9 @@ reset_error:
 	mutex_unlock(&mdp3_session->lock);
 	return rc;
 }
+#ifdef CONFIG_HUAWEI_LCD
+bool reset_done = false;
+#endif
 
 static int mdp3_ctrl_reset(struct msm_fb_data_type *mfd)
 {
@@ -972,7 +1004,11 @@ static int mdp3_ctrl_display_commit_kickoff(struct msm_fb_data_type *mfd,
 	struct mdp3_img_data *data;
 	struct mdss_panel_info *panel_info = mfd->panel_info;
 	int rc = 0;
+
+#ifndef CONFIG_HUAWEI_LCD
 	bool reset_done = false;
+#endif
+
 	struct mdss_panel_data *panel;
 
 	if (!mfd || !mfd->mdp.private1)
@@ -1040,9 +1076,18 @@ static int mdp3_ctrl_display_commit_kickoff(struct msm_fb_data_type *mfd,
 	}
 
 	mdp3_session->vsync_before_commit = 0;
+
+#ifndef CONFIG_HUAWEI_LCD
 	if (reset_done && (panel && panel->set_backlight))
 		panel->set_backlight(panel, panel->panel_info.bl_max);
+#else
+	if (reset_done && (panel && panel->set_backlight))
+	{
+		panel->set_backlight(panel, panel->panel_info.bl_max);
+		reset_done = false;
+	}
 
+#endif
 	mutex_unlock(&mdp3_session->lock);
 
 	mdss_fb_update_notify_update(mfd);
@@ -1650,6 +1695,12 @@ static int mdp3_ctrl_ioctl_handler(struct msm_fb_data_type *mfd,
 	if (!mdp3_session->status && cmd != MSMFB_METADATA_GET &&
 		cmd != MSMFB_HISTOGRAM_STOP) {
 		pr_err("mdp3_ctrl_ioctl_handler, display off!\n");
+#ifdef CONFIG_HUAWEI_KERNEL
+		if (cmd == MSMFB_METADATA_SET)
+		{
+		    return 0;// app set error timing
+		}
+#endif
 		return -EPERM;
 	}
 
@@ -1676,6 +1727,16 @@ static int mdp3_ctrl_ioctl_handler(struct msm_fb_data_type *mfd,
 		}
 		break;
 	case MSMFB_ASYNC_BLIT:
+#ifdef CONFIG_HUAWEI_LCD
+		if (!mdp3_iommu_is_attached(MDP3_CLIENT_DMA_P))
+		{
+			pr_debug("continuous splash screen, IOMMU not attached\n");
+			mdp3_ctrl_reset(mfd);
+			reset_done = true;
+		}
+#endif
+
+
 		rc = mdp3_ctrl_async_blit_req(mfd, argp);
 		break;
 	case MSMFB_BLIT:

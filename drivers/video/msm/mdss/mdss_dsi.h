@@ -204,6 +204,16 @@ struct dsi_panel_cmds {
 	int link_state;
 };
 
+#ifdef CONFIG_HUAWEI_LCD
+struct dsi_panel_esd_cmds {
+	char *buf;
+	int blen;
+	struct dsi_cmd_desc *cmds;
+	struct  dsi_rx_cmd_desc *rx_cmds;
+	int cmd_cnt;
+};
+#endif
+
 struct dsi_kickoff_action {
 	struct list_head act_entry;
 	void (*action) (void *);
@@ -229,6 +239,7 @@ enum {
 
 #define DSI_FLAG_CLOCK_MASTER		0x80000000
 
+/* recreat lcd dts in fc1 baseline */
 struct mdss_dsi_ctrl_pdata {
 	int ndx;	/* panel_num */
 	int (*on) (struct mdss_panel_data *pdata);
@@ -256,7 +267,10 @@ struct mdss_dsi_ctrl_pdata {
 	int disp_en_gpio;
 	int disp_te_gpio;
 	int mode_gpio;
+	int rst_gpio_requested;
+	int disp_en_gpio_requested;	
 	int disp_te_gpio_requested;
+	int mode_gpio_requested;
 	int bklt_ctrl;	/* backlight ctrl */
 	int pwm_period;
 	int pwm_pmic_gpio;
@@ -275,7 +289,15 @@ struct mdss_dsi_ctrl_pdata {
 
 	struct dsi_panel_cmds on_cmds;
 	struct dsi_panel_cmds off_cmds;
-
+#ifdef CONFIG_HUAWEI_LCD
+	bool esd_check_enable;
+	struct dsi_panel_esd_cmds esd_cmds;
+	u32 esd_read_len;
+	const char* esd_read_except_value;
+	u32 first_wake_up;
+	struct dsi_panel_cmds temporary_pwm_cmds;
+	struct dsi_panel_cmds normal_pwm_cmds;
+#endif
 	struct dcs_cmd_list cmdlist;
 	struct completion dma_comp;
 	struct completion mdp_comp;
@@ -286,9 +308,31 @@ struct mdss_dsi_ctrl_pdata {
 	int mdp_busy;
 	struct mutex mutex;
 	struct mutex cmd_mutex;
+#ifdef CONFIG_HUAWEI_KERNEL
+	struct mutex put_mutex;
+#endif
 
 	struct dsi_buf tx_buf;
 	struct dsi_buf rx_buf;
+#ifdef CONFIG_FB_AUTO_CABC
+	struct dsi_panel_cmds dsi_panel_cabc_ui_cmds;
+	struct dsi_panel_cmds dsi_panel_cabc_video_cmds;
+	int (*config_cabc) (struct mdss_panel_data *pdata,struct msmfb_cabc_config cabc_cfg);
+#endif
+#ifdef CONFIG_FB_DISPLAY_INVERSION
+	struct dsi_panel_cmds dsi_panel_inverse_on_cmds;
+	struct dsi_panel_cmds dsi_panel_inverse_off_cmds;
+#endif
+#ifdef CONFIG_HUAWEI_LCD
+	struct dsi_panel_cmds dot_inversion_cmds;
+	struct dsi_panel_cmds column_inversion_cmds;
+#endif
+	int bias_enp_gpio;
+	int bias_enn_gpio;
+	int bias_enp_gpio_requested;
+	int bias_enn_gpio_requested;
+	struct dsi_panel_cmds display_on_cmd;
+	struct dsi_panel_cmds display_off_cmd;
 };
 
 int dsi_panel_device_register(struct device_node *pan_node,

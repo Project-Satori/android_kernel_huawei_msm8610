@@ -92,7 +92,10 @@ struct dsi_cmd_desc {
 	struct dsi_ctrl_hdr dchdr;
 	char *payload;
 };
-
+struct dsi_rx_cmd_desc {
+	u8 elen;/*8 bits*/
+	char *excpet_result;
+};
 #define CMD_REQ_MAX     4
 #define CMD_REQ_RX      0x0001
 #define CMD_REQ_COMMIT  0x0002

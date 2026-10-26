@@ -51,7 +51,7 @@ struct dsi_status_data {
 };
 struct dsi_status_data *pstatus_data;
 static uint32_t interval = STATUS_CHECK_INTERVAL;
-
+//delete unwanted lock
 void check_dsi_ctrl_status(struct work_struct *work)
 {
 	struct dsi_status_data *pdsi_status = NULL;
@@ -80,11 +80,15 @@ void check_dsi_ctrl_status(struct work_struct *work)
 		return;
 	}
 	mdp3_session = pdsi_status->mfd->mdp.private1;
+#ifndef CONFIG_HUAWEI_LCD
 	mutex_lock(&mdp3_session->lock);
+#endif
 
 	if (!mdp3_session->status) {
 		pr_info("display off already\n");
+#ifndef CONFIG_HUAWEI_LCD
 		mutex_unlock(&mdp3_session->lock);
+#endif
 		return;
 	}
 
@@ -96,7 +100,9 @@ void check_dsi_ctrl_status(struct work_struct *work)
 	else
 		pr_err("wait_for_dma_done error\n");
 
+#ifndef CONFIG_HUAWEI_LCD
 	mutex_unlock(&mdp3_session->lock);
+#endif
 
 	if ((pdsi_status->mfd->panel_power_on)) {
 		if (ret > 0) {
