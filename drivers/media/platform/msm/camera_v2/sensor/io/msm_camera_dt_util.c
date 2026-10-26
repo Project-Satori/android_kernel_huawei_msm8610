@@ -823,6 +823,24 @@ int msm_camera_init_gpio_pin_tbl(struct device_node *of_node,
 			gconf->gpio_num_info->gpio_num[SENSOR_GPIO_FL_NOW]);
 	}
 
+	if (of_property_read_bool(of_node, "qcom,gpio-af-pwdm") == true) {
+		rc = of_property_read_u32(of_node, "qcom,gpio-af-pwdm", &val);
+		if (rc < 0) {
+			pr_err("%s:%d read qcom,gpio-af-pwdm failed rc %d\n",
+				__func__, __LINE__, rc);
+			goto ERROR;
+		} else if (val >= gpio_array_size) {
+			pr_err("%s:%d qcom,gpio-af-pwdm invalid %d\n",
+				__func__, __LINE__, val);
+			goto ERROR;
+		}
+		gconf->gpio_num_info->gpio_num[SENSOR_GPIO_AF_PWDM] =
+			gpio_array[val];
+		gconf->gpio_num_info->valid[SENSOR_GPIO_AF_PWDM] = 1;
+		CDBG("%s qcom,gpio-flash-now %d\n", __func__,
+			gconf->gpio_num_info->gpio_num[SENSOR_GPIO_AF_PWDM]);
+	}
+
 	return rc;
 
 ERROR:
@@ -1191,14 +1209,16 @@ int msm_camera_power_down(struct msm_camera_power_ctrl_t *ctrl,
 					SENSOR_GPIO_MAX);
 				continue;
 			}
+			CDBG("%s gpio_num %d,config_val %ld\n", __func__,
+				(int)ctrl->gpio_conf->gpio_num_info->gpio_num[pd->seq_val],
+				pd->config_val);
 			if (!ctrl->gpio_conf->gpio_num_info->valid
 				[pd->seq_val])
 				continue;
 			gpio_set_value_cansleep(
 				ctrl->gpio_conf->gpio_num_info->gpio_num
 				[pd->seq_val],
-				ctrl->gpio_conf->gpio_num_info->gpio_num
-				[pd->config_val]);
+				pd->config_val);
 			break;
 		case SENSOR_VREG:
 			if (pd->seq_val >= CAM_VREG_MAX) {

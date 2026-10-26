@@ -48,6 +48,13 @@ struct msm_sensor_fn_t {
 	int (*sensor_power_down) (struct msm_sensor_ctrl_t *);
 	int (*sensor_power_up) (struct msm_sensor_ctrl_t *);
 	int (*sensor_match_id) (struct msm_sensor_ctrl_t *);
+	/*add detect camera module interface*/
+	int (*sensor_match_module) (struct msm_sensor_ctrl_t *);
+#ifdef CONFIG_HUAWEI_KERNEL_CAMERA
+	int (*sensor_add_project_name) (struct msm_sensor_ctrl_t *);
+	// for otp
+	int (*sensor_set_otp_info) (struct msm_sensor_ctrl_t *);
+#endif
 };
 
 
@@ -73,6 +80,7 @@ struct msm_sensor_ctrl_t {
 	uint8_t is_probe_succeed;
 	uint32_t id;
 	struct device_node *of_node;
+	struct msm_sensor_power_setting_array power_down_setting_array;
 };
 
 int msm_sensor_config(struct msm_sensor_ctrl_t *s_ctrl, void __user *argp);
@@ -108,4 +116,7 @@ int32_t msm_sensor_get_dt_gpio_set_tbl(struct device_node *of_node,
 int32_t msm_sensor_init_gpio_pin_tbl(struct device_node *of_node,
 	struct msm_camera_gpio_conf *gconf, uint16_t *gpio_array,
 	uint16_t gpio_array_size);
+#ifdef CONFIG_HUAWEI_KERNEL_CAMERA
+void hw_msm_sensor_dvdd_gpio_control(uint16_t gpio_num, long gpio_value);
+#endif
 #endif

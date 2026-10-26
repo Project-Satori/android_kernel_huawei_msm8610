@@ -40,6 +40,10 @@
 	(VFE32_STATS_BASE(idx) + 0x4 * \
 	(~(ping_pong >> (idx + VFE32_STATS_PING_PONG_OFFSET)) & 0x1))
 
+#ifdef CONFIG_HUAWEI_KERNEL_CAMERA
+#define HW_MAX_SOF_LOG_NUM 5
+static int log_print_num = 0;
+#endif
 #define VFE32_CLK_IDX 0
 #define MSM_ISP32_TOTAL_WM_UB 792
 
@@ -189,7 +193,15 @@ static void msm_vfe32_process_camif_irq(struct vfe_device *vfe_dev,
 		return;
 
 	if (irq_status0 & BIT(0)) {
+#ifdef CONFIG_HUAWEI_KERNEL_CAMERA
+		if(log_print_num > 0)
+		{
+			log_print_num--;
+			pr_info("%s: SOF IRQ %d\n", __func__,log_print_num);
+		}
+#else
 		ISP_DBG("%s: SOF IRQ\n", __func__);
+#endif
 		if (vfe_dev->axi_data.src_info[VFE_PIX_0].raw_stream_count > 0
 			&& vfe_dev->axi_data.src_info[VFE_PIX_0].
 			pix_stream_count == 0) {
@@ -402,6 +414,11 @@ static long msm_vfe32_reset_hardware(struct vfe_device *vfe_dev ,
 	rst_val = msm_vfe32_reset_values[reset_type];
 	init_completion(&vfe_dev->reset_complete);
 	msm_camera_io_w_mb(rst_val, vfe_dev->vfe_base + 0x4);
+#ifdef CONFIG_HUAWEI_KERNEL_CAMERA
+	pr_info("%s: \n",__func__);
+	//we print 5 times when camera stream on
+	log_print_num = HW_MAX_SOF_LOG_NUM;
+#endif
 	return wait_for_completion_timeout(
 	   &vfe_dev->reset_complete, msecs_to_jiffies(50));
 }
