@@ -9,6 +9,15 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+#ifdef CONFIG_HUAWEI_KERNEL
+/* Open debug log for development version, will be closed after TR5 */
+#ifdef CONFIG_DYNAMIC_DEBUG
+#undef CONFIG_DYNAMIC_DEBUG
+#endif
+#ifndef DEBUG
+#define DEBUG
+#endif
+#endif
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/firmware.h>
@@ -94,13 +103,18 @@
 #define WCD9XXX_MEAS_DELTA_MAX_MV 120
 #define WCD9XXX_MEAS_INVALD_RANGE_LOW_MV 20
 #define WCD9XXX_MEAS_INVALD_RANGE_HIGH_MV 80
-
+/* Add the debounce time to ensure the voltage restore to normal */
+#define CSMODE_HS_DETECT_PLUG_INERVAL_MS  200
 /*
  * Invalid voltage range for the detection
  * of plug type with current source
  */
-#define WCD9XXX_CS_MEAS_INVALD_RANGE_LOW_MV 160
-#define WCD9XXX_CS_MEAS_INVALD_RANGE_HIGH_MV 265
+ /* change invalid range from 110~265 to 3110~3265,
+  * means not use invalid range,because cannot get
+  * value in the range when detect headset type
+  */
+#define WCD9XXX_CS_MEAS_INVALD_RANGE_LOW_MV 3110
+#define WCD9XXX_CS_MEAS_INVALD_RANGE_HIGH_MV 3265
 
 /*
  * Threshold used to detect euro headset
@@ -120,7 +134,8 @@
 #define WCD9XXX_WG_TIME_FACTOR_US	240
 
 #define WCD9XXX_V_CS_HS_MAX 500
-#define WCD9XXX_V_CS_NO_MIC 5
+/* Adjust the WCD9XXX_V_CS_NO_MIC to ensure the headphone could be detected correctly */
+#define WCD9XXX_V_CS_NO_MIC 8
 #define WCD9XXX_MB_MEAS_DELTA_MAX_MV 80
 #define WCD9XXX_CS_MEAS_DELTA_MAX_MV 12
 
@@ -1100,6 +1115,10 @@ static s32 __wcd9xxx_codec_sta_dce_v(struct wcd9xxx_mbhc *mbhc, s8 dce,
 		mv = (value - z) * (s32)micb_mv / (mb - z);
 	}
 
+#ifdef CONFIG_HUAWEI_KERNEL
+    pr_debug("%s: dce=%d, bias_value=%d, value=%d, z=%d, mb=%d, mv=%d",
+        __func__, dce, bias_value, value, z, mb, mv);
+#endif
 	return mv;
 }
 
@@ -3175,6 +3194,8 @@ static void wcd9xxx_swch_irq_handler(struct wcd9xxx_mbhc *mbhc)
 	pr_debug("%s: Current plug type %d, insert %d\n", __func__,
 		 mbhc->current_plug, insert);
 	if ((mbhc->current_plug == PLUG_TYPE_NONE) && insert) {
+		/* in cs mode, when insert , increase 200ms debounce*/
+		msleep(CSMODE_HS_DETECT_PLUG_INERVAL_MS);
 		mbhc->lpi_enabled = false;
 		wmb();
 		/* cancel detect plug */

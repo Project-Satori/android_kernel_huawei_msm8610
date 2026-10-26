@@ -914,8 +914,18 @@ static int msm8x10_wcd_pa_gain_get(struct snd_kcontrol *kcontrol,
 
 	if (ear_pa_gain == 0x00) {
 		ucontrol->value.integer.value[0] = 0;
-	} else if (ear_pa_gain == 0x04) {
+	} else if (ear_pa_gain == 0x01) {
 		ucontrol->value.integer.value[0] = 1;
+	} else if (ear_pa_gain == 0x02) {
+		ucontrol->value.integer.value[0] = 2;
+	} else if (ear_pa_gain == 0x03) {
+		ucontrol->value.integer.value[0] = 3;
+	} else if (ear_pa_gain == 0x04) {
+		ucontrol->value.integer.value[0] = 4;
+	} else if (ear_pa_gain == 0x05) {
+		ucontrol->value.integer.value[0] = 5;
+	} else if (ear_pa_gain == 0x07) {
+		ucontrol->value.integer.value[0] = 6;
 	} else  {
 		dev_err(codec->dev, "%s: ERROR: Unsupported Ear Gain = 0x%x\n",
 			__func__, ear_pa_gain);
@@ -939,7 +949,22 @@ static int msm8x10_wcd_pa_gain_put(struct snd_kcontrol *kcontrol,
 		ear_pa_gain = 0x00;
 		break;
 	case 1:
+		ear_pa_gain = 0x20;
+		break;
+	case 2:
+		ear_pa_gain = 0x40;
+		break;
+	case 3:
+		ear_pa_gain = 0x60;
+		break;
+	case 4:
 		ear_pa_gain = 0x80;
+		break;
+	case 5:
+		ear_pa_gain = 0xA0;
+		break;
+	case 6:
+		ear_pa_gain = 0xE0;
 		break;
 	default:
 		return -EINVAL;
@@ -1146,9 +1171,9 @@ static int msm8x10_wcd_put_iir_band_audio_mixer(
 }
 
 static const char * const msm8x10_wcd_ear_pa_gain_text[] = {
-		"POS_6_DB", "POS_2_DB"};
+		"POS_6_DB","POS_4P5_DB","POS_3_DB","POS_1P5_DB","POS_0_DB","NEG_2P5_DB","NEG_12_DB"};
 static const struct soc_enum msm8x10_wcd_ear_pa_gain_enum[] = {
-		SOC_ENUM_SINGLE_EXT(2, msm8x10_wcd_ear_pa_gain_text),
+		SOC_ENUM_SINGLE_EXT(7, msm8x10_wcd_ear_pa_gain_text),
 };
 
 /*cut of frequency for high pass filter*/
@@ -2376,6 +2401,13 @@ static int msm8x10_wcd_codec_enable_ear_pa(struct snd_soc_dapm_widget *w,
 	struct snd_kcontrol *kcontrol, int event)
 {
 	switch (event) {
+	/* To avoid the pop nosie delay 20ms before PMU by case01396303 */
+	case SND_SOC_DAPM_PRE_PMU:
+		dev_dbg(w->codec->dev,
+			"%s: Sleeping 20ms before enabling EAR PA\n",
+			__func__);
+		msleep(20);
+		break;
 	case SND_SOC_DAPM_POST_PMU:
 		dev_dbg(w->codec->dev,
 			"%s: Sleeping 20ms after enabling EAR PA\n",
@@ -2396,8 +2428,10 @@ static const struct snd_soc_dapm_widget msm8x10_wcd_dapm_widgets[] = {
 	/*RX stuff */
 	SND_SOC_DAPM_OUTPUT("EAR"),
 
+	/* To avoid the pop nosie delay 20ms before PMU by case01396303 */
 	SND_SOC_DAPM_PGA_E("EAR PA", MSM8X10_WCD_A_RX_EAR_EN, 4, 0, NULL, 0,
 			msm8x10_wcd_codec_enable_ear_pa,
+			SND_SOC_DAPM_PRE_PMU |
 			SND_SOC_DAPM_POST_PMU | SND_SOC_DAPM_POST_PMD),
 
 	SND_SOC_DAPM_MIXER("DAC1", MSM8X10_WCD_A_RX_EAR_EN, 6, 0, dac1_switch,
